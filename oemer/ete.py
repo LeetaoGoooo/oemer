@@ -288,6 +288,25 @@ def main() -> None:
     img = teaser()
     img.save(mxl_path.replace(".musicxml", "_teaser.png"))
 
+def convert_img_to_musicXml(img_path:str, output_path:str, use_tf=False, save_cache=True, without_deskew=True):
+    if not os.path.exists(img_path):
+        raise FileNotFoundError(f"The given image path doesn't exists: {img_path}")
+
+    # Check there are checkpoints
+    chk_path = os.path.join(MODULE_PATH, "checkpoints/unet_big/model.onnx")
+    if not os.path.exists(chk_path):
+        logger.warn("No checkpoint found in %s", chk_path)
+        for idx, (title, url) in enumerate(CHECKPOINTS_URL.items()):
+            logger.info(f"Downloading checkpoints ({idx+1}/{len(CHECKPOINTS_URL)})")
+            save_dir = "unet_big" if title.startswith("1st") else "seg_net"
+            save_dir = os.path.join(MODULE_PATH, "checkpoints", save_dir)
+            save_path = os.path.join(save_dir, title.split("_")[1])
+            download_file(title, url, save_path)    
+
+    clear_data()
+    mxl_path = extract(Namespace(img_path=img_path,use_tf=use_tf,save_cache=save_cache,without_deskew=without_deskew,output_path=output_path))
+    img = teaser()
+    img.save(mxl_path.replace(".musicxml", "_teaser.png"))
 
 if __name__ == "__main__":
     main()
